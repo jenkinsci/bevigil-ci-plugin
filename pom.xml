@@ -8,7 +8,7 @@
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
-    <artifactId>BeVigil-CI</artifactId>
+    <artifactId>bevigil-ci</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>BeVigil CI Plugin</name>
