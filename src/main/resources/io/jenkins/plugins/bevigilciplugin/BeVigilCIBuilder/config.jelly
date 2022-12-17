@@ -4,10 +4,7 @@
         <f:textbox />
     </f:entry>
     <f:entry name="appType" title="App Type" field="appType">
-        <select name="appType">
-            <option value="android">Android</option>
-            <option value="ios">iOS</option>
-        </select>
+        <f:select name="appType"/>
     </f:entry>
     <f:entry title="${%AppPath}" field="appPath" description="${%AppPathDescr}">
         <f:textbox />
@@ -19,11 +16,7 @@
         <f:textbox />
     </f:entry>
     <f:entry name="severityThreshold" title="Severity Threshold" field="severityThreshold">
-        <select name="severityThreshold">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="High">High</option>
-        </select>
+        <f:select name="severityThreshold" />
     </f:entry>
     <f:advanced>
         <f:entry title="${%French}" field="useFrench"
