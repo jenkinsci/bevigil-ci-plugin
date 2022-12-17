@@ -124,7 +124,6 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
         } catch (Exception e) {
             listener.getLogger().println("error" + e.getLocalizedMessage());
-            System.exit(1);
         }
     }
 
@@ -137,7 +136,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             }
             try {
                 Paths.get(appPath);
-            } catch (InvalidPathException | NullPointerException ex) {
+            } catch (InvalidPathException ex) {
                 return FormValidation.error(Messages.BeVigilCIBuilder_errors_invalidPath());
             }
             return FormValidation.ok();
@@ -148,7 +147,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         }
 
         public FormValidation doCheckScanTimeout(@QueryParameter String scanTimeout){
-            int scanInt = Integer.valueOf(scanTimeout);
+            int scanInt = Integer.parseInt(scanTimeout);
             if(scanInt < 5 || scanInt > 60){
                 return FormValidation.error(Messages.BeVigilCIBuilder_errors_scanTimeout());
             }

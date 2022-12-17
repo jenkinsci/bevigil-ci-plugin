@@ -9,6 +9,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 class GetPresignedUrlResponse {
     @JsonProperty("url")
@@ -24,24 +25,27 @@ class SubmitResponse {
 }
 
 class SubmitRequest {
+
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("upload_url")
     public String uploadUrl;
 
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("app_type")
     public String appType;
-
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("package_name")
     public String packageName;
-
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("source_ci")
     public String sourceCI;
-
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("job_id")
     public String jobID;
-
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("scan_timeout")
     public Integer scanTimeout;
-
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     @JsonProperty("severity_threshold")
     public String severityThreshold;
 }
