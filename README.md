@@ -79,7 +79,7 @@ After uploading the file successfully, the file is scanned using BeVigil's API f
 
 ## Issues
 
-Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/).
+Report issues and enhancements in the [Issue tracker](https://github.com/Bevigil/Bevigil-CI-Plugin/issues).
 
 ## Contributing
 
