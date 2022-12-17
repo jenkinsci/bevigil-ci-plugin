@@ -10,6 +10,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -147,7 +148,12 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         }
 
         public FormValidation doCheckScanTimeout(@QueryParameter String scanTimeout){
-            int scanInt = Integer.parseInt(scanTimeout);
+            int scanInt;
+            try{
+                scanInt = Integer.parseInt(scanTimeout);
+            }catch (NumberFormatException e){
+                return FormValidation.error(Messages.BeVigilCIBuilder_errors_scanTimeout());
+            }
             if(scanInt < 5 || scanInt > 60){
                 return FormValidation.error(Messages.BeVigilCIBuilder_errors_scanTimeout());
             }
@@ -162,7 +168,21 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             // }
             return FormValidation.ok();
         }
-        
+
+        public ListBoxModel doFillAppTypeItems() {
+            return new ListBoxModel(
+                    new ListBoxModel.Option("iOS"),
+                    new ListBoxModel.Option("Android")
+            );
+        }
+
+        public ListBoxModel doFillSeverityThresholdItems() {
+            return new ListBoxModel(
+                    new ListBoxModel.Option("Low"),
+                    new ListBoxModel.Option("Medium"),
+                    new ListBoxModel.Option("High")
+            );
+        }
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
