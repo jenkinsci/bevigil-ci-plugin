@@ -10,6 +10,9 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.ListBoxModel;
+import hudson.util.Secret;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -17,14 +20,16 @@ import java.io.File;
 import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.StaplerRequest;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.InvalidPathException;
 
 
 public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
-    private final String apiKey;
+    private final Secret apiKey;
     private final String appType;
     private final String appPath;
 
@@ -36,7 +41,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
 
     @DataBoundConstructor
-    public BeVigilCIBuilder(String apiKey, String appType, String appPath, String packageName, String scanTimeout, String severityThreshold) {
+    public BeVigilCIBuilder(Secret apiKey, String appType, String appPath, String packageName, String scanTimeout, String severityThreshold) {
         this.apiKey = apiKey;
         this.appType = appType;
         this.appPath = appPath;
@@ -49,7 +54,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         return appType;
     }
 
-    public String getApiKey() {return apiKey;}
+    public Secret getApiKey() {return apiKey;}
     public String getAppPath() {return appPath;}
 
     public String getPackageName() { return packageName; }
@@ -63,9 +68,14 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         return true;
     }
 
+    private static boolean isChild(Path child, String parentText) {
+        Path parent = Paths.get(parentText).toAbsolutePath();
+       return child.startsWith(parent);
+    }
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        BeVigilCIClient client = new BeVigilCIClient(Messages.BeVigilCIBuilder_BaseUrl(), apiKey);
+        BeVigilCIClient client = new BeVigilCIClient(Messages.BeVigilCIBuilder_BaseUrl(), apiKey.getPlainText());
 
         try {
             // 1. Get Presigned URL
@@ -73,10 +83,14 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Got Presigned URL: " + presignedUrlResponse.url);
 
             // 2. Upload the APK to the presigned URL
-            String absoluteAppPath = Paths.get(workspace.absolutize().toString(), appPath).toString();
+            String workspaceDirectory = workspace.absolutize().toString();
+            Path absoluteAppPath = Paths.get(workspaceDirectory, appPath).toAbsolutePath().normalize();
+            if (!isChild(absoluteAppPath, workspaceDirectory)) {
+                throw new Exception("The given path: " + absoluteAppPath + " is not in the workspace of the project. Please make sure the apk is in the jenkins workspace of this build step.");
+            }
             listener.getLogger().println("Reading APK from path: " + absoluteAppPath);
 
-            File file = new File(absoluteAppPath);
+            File file = new File(absoluteAppPath.toString());
             if(!file.isFile()){
                 throw  new Exception("File doesn't exist");
             }
@@ -124,7 +138,6 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
         } catch (Exception e) {
             listener.getLogger().println("error" + e.getLocalizedMessage());
-            System.exit(1);
         }
     }
 
@@ -137,7 +150,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             }
             try {
                 Paths.get(appPath);
-            } catch (InvalidPathException | NullPointerException ex) {
+            } catch (InvalidPathException ex) {
                 return FormValidation.error(Messages.BeVigilCIBuilder_errors_invalidPath());
             }
             return FormValidation.ok();
@@ -148,7 +161,12 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         }
 
         public FormValidation doCheckScanTimeout(@QueryParameter String scanTimeout){
-            int scanInt = Integer.valueOf(scanTimeout);
+            int scanInt;
+            try{
+                scanInt = Integer.parseInt(scanTimeout);
+            }catch (NumberFormatException e){
+                return FormValidation.error(Messages.BeVigilCIBuilder_errors_scanTimeout());
+            }
             if(scanInt < 5 || scanInt > 60){
                 return FormValidation.error(Messages.BeVigilCIBuilder_errors_scanTimeout());
             }
@@ -163,7 +181,21 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             // }
             return FormValidation.ok();
         }
-        
+
+        public ListBoxModel doFillAppTypeItems() {
+            return new ListBoxModel(
+                    new ListBoxModel.Option("iOS"),
+                    new ListBoxModel.Option("Android")
+            );
+        }
+
+        public ListBoxModel doFillSeverityThresholdItems() {
+            return new ListBoxModel(
+                    new ListBoxModel.Option("Low"),
+                    new ListBoxModel.Option("Medium"),
+                    new ListBoxModel.Option("High")
+            );
+        }
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
