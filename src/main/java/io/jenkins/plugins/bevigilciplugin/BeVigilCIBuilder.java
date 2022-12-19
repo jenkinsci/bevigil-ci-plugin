@@ -22,6 +22,7 @@ import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.StaplerRequest;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.InvalidPathException;
 
@@ -67,6 +68,11 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         return true;
     }
 
+    private static boolean isChild(Path child, String parentText) {
+        Path parent = Paths.get(parentText).toAbsolutePath();
+       return child.startsWith(parent);
+    }
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         BeVigilCIClient client = new BeVigilCIClient(Messages.BeVigilCIBuilder_BaseUrl(), apiKey.getPlainText());
@@ -77,10 +83,14 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Got Presigned URL: " + presignedUrlResponse.url);
 
             // 2. Upload the APK to the presigned URL
-            String absoluteAppPath = Paths.get(workspace.absolutize().toString(), appPath).toString();
+            String workspaceDirectory = workspace.absolutize().toString();
+            Path absoluteAppPath = Paths.get(workspaceDirectory, appPath).toAbsolutePath().normalize();
+            if (!isChild(absoluteAppPath, workspaceDirectory)) {
+                throw new Exception("The given path: " + absoluteAppPath + " is not in the workspace of the project. Please make sure the apk is in the jenkins workspace of this build step.");
+            }
             listener.getLogger().println("Reading APK from path: " + absoluteAppPath);
 
-            File file = new File(absoluteAppPath);
+            File file = new File(absoluteAppPath.toString());
             if(!file.isFile()){
                 throw  new Exception("File doesn't exist");
             }
