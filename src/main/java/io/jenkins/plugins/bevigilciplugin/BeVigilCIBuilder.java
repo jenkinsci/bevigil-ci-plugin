@@ -11,6 +11,8 @@ import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -18,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.nio.file.Paths;
 import java.nio.file.InvalidPathException;
@@ -25,7 +28,7 @@ import java.nio.file.InvalidPathException;
 
 public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
-    private final String apiKey;
+    private final Secret apiKey;
     private final String appType;
     private final String appPath;
 
@@ -37,7 +40,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
 
     @DataBoundConstructor
-    public BeVigilCIBuilder(String apiKey, String appType, String appPath, String packageName, String scanTimeout, String severityThreshold) {
+    public BeVigilCIBuilder(Secret apiKey, String appType, String appPath, String packageName, String scanTimeout, String severityThreshold) {
         this.apiKey = apiKey;
         this.appType = appType;
         this.appPath = appPath;
@@ -50,7 +53,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
         return appType;
     }
 
-    public String getApiKey() {return apiKey;}
+    public Secret getApiKey() {return apiKey;}
     public String getAppPath() {return appPath;}
 
     public String getPackageName() { return packageName; }
@@ -66,7 +69,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        BeVigilCIClient client = new BeVigilCIClient(Messages.BeVigilCIBuilder_BaseUrl(), apiKey);
+        BeVigilCIClient client = new BeVigilCIClient(Messages.BeVigilCIBuilder_BaseUrl(), apiKey.getPlainText());
 
         try {
             // 1. Get Presigned URL
