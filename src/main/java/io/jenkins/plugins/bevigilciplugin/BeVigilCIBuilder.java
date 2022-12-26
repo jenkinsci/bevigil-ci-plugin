@@ -184,16 +184,16 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
         public ListBoxModel doFillAppTypeItems() {
             return new ListBoxModel(
-                    new ListBoxModel.Option("iOS"),
-                    new ListBoxModel.Option("Android")
+                    new ListBoxModel.Option("iOS", "ios"),
+                    new ListBoxModel.Option("Android", "android")
             );
         }
 
         public ListBoxModel doFillSeverityThresholdItems() {
             return new ListBoxModel(
-                    new ListBoxModel.Option("Low"),
-                    new ListBoxModel.Option("Medium"),
-                    new ListBoxModel.Option("High")
+                    new ListBoxModel.Option("Low", "low"),
+                    new ListBoxModel.Option("Medium", "medium"),
+                    new ListBoxModel.Option("High", "high")
             );
         }
         @Override
