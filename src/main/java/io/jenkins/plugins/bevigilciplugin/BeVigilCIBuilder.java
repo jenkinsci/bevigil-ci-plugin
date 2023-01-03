@@ -84,7 +84,8 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
             // 2. Upload the APK to the presigned URL
             String workspaceDirectory = workspace.absolutize().toString();
-            Path absoluteAppPath = Paths.get(workspaceDirectory, appPath).toAbsolutePath().normalize();
+            Path absoluteAppPath = Paths.get(workspaceDirectory, appPath).toRealPath();
+
             if (!isChild(absoluteAppPath, workspaceDirectory)) {
                 throw new Exception("The given path: " + absoluteAppPath + " is not in the workspace of the project. Please make sure the apk is in the jenkins workspace of this build step.");
             }
@@ -124,6 +125,7 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
                     logCount++;
                 }
                 if(status.equalsIgnoreCase("error")){
+                    System.out.println(status);
                     throw new Exception("Scan error");
                 }
 
@@ -184,16 +186,16 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
 
         public ListBoxModel doFillAppTypeItems() {
             return new ListBoxModel(
-                    new ListBoxModel.Option("iOS"),
-                    new ListBoxModel.Option("Android")
+                    new ListBoxModel.Option("iOS", "ios"),
+                    new ListBoxModel.Option("Android", "android")
             );
         }
 
         public ListBoxModel doFillSeverityThresholdItems() {
             return new ListBoxModel(
-                    new ListBoxModel.Option("Low"),
-                    new ListBoxModel.Option("Medium"),
-                    new ListBoxModel.Option("High")
+                    new ListBoxModel.Option("Low", "low"),
+                    new ListBoxModel.Option("Medium", "medium"),
+                    new ListBoxModel.Option("High", "high")
             );
         }
         @Override
