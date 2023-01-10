@@ -14,7 +14,7 @@
 
 <br />
 
-This is a plugin to scan Android and ioS applications in your jenkins pipelines using [CloudSek BeVigil](https://bevigil.com/). BeVigil can 
+This is a plugin to scan Android and iOS applications in your jenkins pipelines using [CloudSek BeVigil](https://bevigil.com/). BeVigil can 
 analyze code at scale and easily search for API keys, regexes, etc to see the matches in different files of an application.
 <br />
 <br />
@@ -49,7 +49,7 @@ Next, navigate to the available tab, and search for the "BeVigil VI" plugin. Cli
 
 
 
-- **API KEY**: Your BeVigil API Key
+- **API KEY**: Your BeVigil Enterprise API Key
 - **App Type**: Select Android/ioS
 - **App Path**: This is the path to your built app relative to the root of your jenkins workspace.
 - **Package Name**: Enter the package name for your application
