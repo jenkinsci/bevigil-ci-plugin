@@ -10,6 +10,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.FilePath;
 
 class GetPresignedUrlResponse {
     @JsonProperty("url")
@@ -87,17 +88,36 @@ public class BeVigilCIClient {
         return objectMapper.readValue(res.body(), GetPresignedUrlResponse.class);
     }
 
-    public void uploadToPresignedUrl(File buildFile, String presignedURL) throws Exception {
-        URL uploadEndpoint = new URL(presignedURL);
-        HttpRequest req = HttpRequest.newBuilder().uri(uploadEndpoint.toURI())
-                .PUT(HttpRequest.BodyPublishers.ofFile(buildFile.toPath()))
-//                .setHeader("Content-Type", "application/vnd.android.package-archive")
-                .build();
+public void uploadToPresignedUrl(FilePath buildFile, String presignedURL) throws Exception {
+    URL uploadEndpoint = new URL(presignedURL);
+
+    String originalFileName = buildFile.getName();
+    
+    int lastDotIndex = originalFileName.lastIndexOf('.');
+    String extension = lastDotIndex > 0 ? originalFileName.substring(lastDotIndex) : "";
+    File tempFile = File.createTempFile("upload", extension);
+    
+    try {
+        // Copy FilePath contents to temp file
+        buildFile.copyTo(new FilePath(tempFile));
+        
+        HttpRequest req = HttpRequest.newBuilder()
+            .uri(uploadEndpoint.toURI())
+            .PUT(HttpRequest.BodyPublishers.ofFile(tempFile.toPath()))
+            //.setHeader("Content-Type", "application/vnd.android.package-archive")
+            .build();
+            
         HttpResponse<String> res = this.client.send(req, BodyHandlers.ofString());
         if (res.statusCode() != 200) {
-            throw new Exception("Could not upload to presigned URL" + res.statusCode() + " and body: " + res.body());
+            throw new Exception("Could not upload to presigned URL. Status code: " + res.statusCode() + " and body: " + res.body());
+        }
+    } finally {
+        // Clean up temporary file with proper error handling
+        if (tempFile != null && tempFile.exists()) {
+            boolean deleted = tempFile.delete();
         }
     }
+}
 
     public SubmitResponse submit(SubmitRequest request) throws Exception{
         URL uploadPath = new URL(new URL(baseUrl), "/submit");
