@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.util.FormValidation;
 import hudson.model.AbstractProject;
+import hudson.model.Computer;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
@@ -83,21 +84,16 @@ public class BeVigilCIBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Got Presigned URL: " + presignedUrlResponse.url);
 
             // 2. Upload the APK to the presigned URL
-            String workspaceDirectory = workspace.absolutize().toString();
-            Path absoluteAppPath = Paths.get(workspaceDirectory, appPath).toRealPath();
+            FilePath absoluteAppPath = new FilePath(workspace, appPath);
+            // FilePath absoluteAppPath = new FilePath(launcher.getChannel(), appPath); // Updated to use the agent's local file path
 
-            if (!isChild(absoluteAppPath, workspaceDirectory)) {
-                throw new Exception("The given path: " + absoluteAppPath + " is not in the workspace of the project. Please make sure the apk is in the jenkins workspace of this build step.");
+            if (!absoluteAppPath.exists()) {
+                throw new Exception("The APK file does not exist at the given path: " + absoluteAppPath.getRemote());
             }
-            listener.getLogger().println("Reading APK from path: " + absoluteAppPath);
-
-            File file = new File(absoluteAppPath.toString());
-            if(!file.isFile()){
-                throw  new Exception("File doesn't exist");
-            }
+            listener.getLogger().println("Reading APK from path: " + absoluteAppPath.getRemote());
 
             listener.getLogger().println("Uploading file...");
-            client.uploadToPresignedUrl(file, presignedUrlResponse.url);
+            client.uploadToPresignedUrl(absoluteAppPath, presignedUrlResponse.url);
             listener.getLogger().println("File uploaded successfully");
 
             // 3. Submit route and send presigned URL
